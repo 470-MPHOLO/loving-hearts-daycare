@@ -6,71 +6,349 @@
     <title>Admin - Loving Hearts Day Care</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .password-screen {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #fce4ec, #f3e5f5);
+            padding: 20px;
+        }
+        
+        .password-box {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+        
+        .password-box i {
+            font-size: 3rem;
+            color: #e91e63;
+            margin-bottom: 20px;
+        }
+        
+        .password-input {
+            width: 100%;
+            padding: 12px;
+            margin: 20px 0;
+            border: 2px solid #f0f0f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        
+        .password-input:focus {
+            outline: none;
+            border-color: #e91e63;
+        }
+        
+        .admin-content {
+            display: none;
+        }
+        
+        .error-message {
+            color: #f44336;
+            margin-top: 10px;
+            display: none;
+        }
+        
+        .attempts-warning {
+            color: #ff9800;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+    </style>
 </head>
 <body>
-    <nav class="navbar">
-        <div class="nav-container">
-            <a href="index.html" class="logo">
-                <i class="fas fa-heart"></i>
-                <span>Admin Panel</span>
-            </a>
-            <a href="index.html" class="btn btn-secondary">Back to Website</a>
+    <!-- Password Screen -->
+    <div class="password-screen" id="passwordScreen">
+        <div class="password-box">
+            <i class="fas fa-lock"></i>
+            <h2>Admin Access</h2>
+            <p>Enter admin password to continue</p>
+            <input type="password" id="adminPassword" class="password-input" 
+                   placeholder="Enter password" autocomplete="off">
+            <button onclick="checkPassword()" class="btn btn-primary">
+                <i class="fas fa-unlock"></i> Login
+            </button>
+            <div class="error-message" id="errorMessage">
+                Incorrect password
+            </div>
+            <div class="attempts-warning" id="attemptsWarning" style="display: none;">
+                Too many attempts. Try again in <span id="lockoutTime">30</span> seconds.
+            </div>
+            <p style="margin-top: 20px; font-size: 0.9rem; color: #666;">
+                Contact school owner for password access
+            </p>
         </div>
-    </nav>
+    </div>
 
-    <div class="admin-container">
-        <div class="container">
-            <div class="admin-header">
-                <h1 class="section-title">Administrator Panel</h1>
-                <p>Upload and manage prospectuses and documents</p>
-            </div>
-
-            <div class="admin-card">
-                <h2><i class="fas fa-upload"></i> Upload New Document</h2>
-                <form id="uploadForm" class="admin-form">
-                    <div class="form-group">
-                        <label for="documentTitle">Document Title</label>
-                        <input type="text" id="documentTitle" class="form-control" 
-                               placeholder="e.g., Boarding Prospectus 2024" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="documentType">Document Type</label>
-                        <select id="documentType" class="form-control" required>
-                            <option value="">Select document type</option>
-                            <option value="prospectus">Prospectus</option>
-                            <option value="fee_structure">Fee Structure</option>
-                            <option value="policy">Policy Document</option>
-                            <option value="other">Other</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Upload File</label>
-                        <div class="upload-area" id="uploadArea">
-                            <i class="fas fa-cloud-upload-alt"></i>
-                            <p>Click to select file or drag and drop</p>
-                            <p class="file-name" id="fileName">No file selected</p>
-                            <input type="file" id="fileInput" accept=".pdf,.doc,.docx">
-                        </div>
-                    </div>
-                    
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-upload"></i> Upload Document
+    <!-- Admin Content (Hidden until password is correct) -->
+    <div class="admin-content" id="adminContent">
+        <nav class="navbar">
+            <div class="nav-container">
+                <a href="index.html" class="logo">
+                    <i class="fas fa-heart"></i>
+                    <span>Admin Panel</span>
+                </a>
+                <div>
+                    <button onclick="logout()" class="btn btn-secondary">
+                        <i class="fas fa-sign-out-alt"></i> Logout
                     </button>
-                </form>
+                    <a href="index.html" class="btn btn-primary">
+                        <i class="fas fa-home"></i> View Website
+                    </a>
+                </div>
             </div>
+        </nav>
 
-            <div class="admin-card">
-                <h2><i class="fas fa-folder-open"></i> Uploaded Documents</h2>
-                <div id="uploadedFiles">
-                    <div class="spinner" id="loadingSpinner"></div>
-                    <div class="document-list" id="documentList"></div>
+        <div class="admin-container">
+            <div class="container">
+                <div class="admin-header">
+                    <h1 class="section-title">Document Management</h1>
+                    <p>Manage prospectuses and documents for parents</p>
+                </div>
+
+                <!-- Upload via Google Drive -->
+                <div class="admin-card">
+                    <h2><i class="fas fa-cloud-upload-alt"></i> Add New Document</h2>
+                    <p class="instruction-text">
+                        Upload files to Google Drive and add the links below:
+                    </p>
+                    
+                    <form id="documentForm" class="admin-form">
+                        <div class="form-group">
+                            <label for="docTitle"><i class="fas fa-heading"></i> Document Title</label>
+                            <input type="text" id="docTitle" class="form-control" 
+                                   placeholder="e.g., Boarding Prospectus 2024" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="docType"><i class="fas fa-tag"></i> Document Type</label>
+                            <select id="docType" class="form-control" required>
+                                <option value="">Select type</option>
+                                <option value="prospectus">Prospectus</option>
+                                <option value="fees">Fee Structure</option>
+                                <option value="policy">Policy Document</option>
+                                <option value="form">Registration Form</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="docLink"><i class="fas fa-link"></i> Google Drive Link</label>
+                            <input type="url" id="docLink" class="form-control" 
+                                   placeholder="https://drive.google.com/file/d/..." required>
+                            <small style="color: #666; display: block; margin-top: 5px;">
+                                Make sure the link is set to "Anyone with the link can view"
+                            </small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="docDescription"><i class="fas fa-align-left"></i> Description</label>
+                            <textarea id="docDescription" class="form-control" rows="3" 
+                                      placeholder="Brief description of this document..."></textarea>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-plus-circle"></i> Add Document
+                        </button>
+                    </form>
+                    
+                    <div class="drive-instructions">
+                        <h3><i class="fas fa-question-circle"></i> How to Upload to Google Drive:</h3>
+                        <ol>
+                            <li>Go to <a href="https://drive.google.com" target="_blank">Google Drive</a></li>
+                            <li>Upload your file (PDF, DOC, etc.)</li>
+                            <li>Right-click the file → "Get link"</li>
+                            <li>Change sharing to "Anyone with the link"</li>
+                            <li>Copy the link and paste above</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <!-- Manage Existing Documents -->
+                <div class="admin-card">
+                    <h2><i class="fas fa-list"></i> Current Documents</h2>
+                    <div id="documentsList">
+                        <div class="spinner" id="loadingSpinner"></div>
+                        <!-- Documents will load here -->
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="admin-card">
+                    <h2><i class="fas fa-bolt"></i> Quick Actions</h2>
+                    <div class="quick-actions">
+                        <button onclick="window.open('https://forms.gle/fU32zcLY6FtVD5uj7', '_blank')" 
+                                class="btn btn-secondary">
+                            <i class="fas fa-edit"></i> Open Registration Form
+                        </button>
+                        <button onclick="window.open('https://drive.google.com', '_blank')" 
+                                class="btn btn-secondary">
+                            <i class="fas fa-cloud"></i> Open Google Drive
+                        </button>
+                        <button onclick="exportDocuments()" class="btn btn-secondary">
+                            <i class="fas fa-download"></i> Backup Documents
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <script src="admin.js"></script>
+    <script>
+        // Password Protection - HARDCODED (More secure!)
+        const ADMIN_PASSWORD = "LovingHearts@2024"; // Hardcoded password
+        let failedAttempts = 0;
+        const MAX_ATTEMPTS = 3;
+        let isLocked = false;
+        
+        function checkPassword() {
+            if (isLocked) return;
+            
+            const input = document.getElementById('adminPassword').value;
+            const error = document.getElementById('errorMessage');
+            const warning = document.getElementById('attemptsWarning');
+            
+            if (input === ADMIN_PASSWORD) {
+                // Successful login
+                document.getElementById('passwordScreen').style.display = 'none';
+                document.getElementById('adminContent').style.display = 'block';
+                
+                // Store login session for 2 hours
+                localStorage.setItem('adminLoggedIn', 'true');
+                localStorage.setItem('loginTime', Date.now());
+                
+                // Reset attempts on successful login
+                failedAttempts = 0;
+            } else {
+                // Failed attempt
+                failedAttempts++;
+                error.style.display = 'block';
+                document.getElementById('adminPassword').value = '';
+                document.getElementById('adminPassword').focus();
+                
+                // Shake animation
+                document.querySelector('.password-box').style.animation = 'shake 0.5s';
+                setTimeout(() => {
+                    document.querySelector('.password-box').style.animation = '';
+                }, 500);
+                
+                // Check if too many attempts
+                if (failedAttempts >= MAX_ATTEMPTS) {
+                    lockoutUser();
+                }
+            }
+        }
+        
+        function lockoutUser() {
+            isLocked = true;
+            const warning = document.getElementById('attemptsWarning');
+            const lockoutTime = document.getElementById('lockoutTime');
+            
+            warning.style.display = 'block';
+            document.getElementById('adminPassword').disabled = true;
+            
+            let seconds = 30;
+            const countdown = setInterval(() => {
+                lockoutTime.textContent = seconds;
+                seconds--;
+                
+                if (seconds < 0) {
+                    clearInterval(countdown);
+                    isLocked = false;
+                    failedAttempts = 0;
+                    warning.style.display = 'none';
+                    document.getElementById('adminPassword').disabled = false;
+                    document.getElementById('errorMessage').style.display = 'none';
+                }
+            }, 1000);
+        }
+        
+        function logout() {
+            localStorage.removeItem('adminLoggedIn');
+            localStorage.removeItem('loginTime');
+            window.location.reload();
+        }
+        
+        // Check if already logged in
+        window.onload = function() {
+            const loggedIn = localStorage.getItem('adminLoggedIn');
+            const loginTime = localStorage.getItem('loginTime');
+            
+            if (loggedIn && loginTime) {
+                // Check if session expired (2 hours)
+                const timePassed = Date.now() - parseInt(loginTime);
+                if (timePassed < 2 * 60 * 60 * 1000) { // 2 hours in milliseconds
+                    document.getElementById('passwordScreen').style.display = 'none';
+                    document.getElementById('adminContent').style.display = 'block';
+                } else {
+                    localStorage.removeItem('adminLoggedIn');
+                    localStorage.removeItem('loginTime');
+                }
+            }
+            
+            // Allow Enter key for password
+            document.getElementById('adminPassword').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    checkPassword();
+                }
+            });
+        };
+        
+        // CSS for shake animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% {transform: translateX(0);}
+                10%, 30%, 50%, 70%, 90% {transform: translateX(-5px);}
+                20%, 40%, 60%, 80% {transform: translateX(5px);}
+            }
+            
+            /* Admin specific styles */
+            .instruction-text {
+                color: #666;
+                margin-bottom: 20px;
+                padding-bottom: 20px;
+                border-bottom: 1px solid #f0f0f0;
+            }
+            
+            .drive-instructions {
+                background: #f8f9fa;
+                padding: 20px;
+                border-radius: 10px;
+                margin-top: 30px;
+                border-left: 4px solid #4caf50;
+            }
+            
+            .drive-instructions ol {
+                margin: 15px 0 0 20px;
+            }
+            
+            .drive-instructions li {
+                margin-bottom: 8px;
+                color: #555;
+            }
+            
+            .quick-actions {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+            
+            .quick-actions button {
+                flex: 1;
+                min-width: 150px;
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
 </body>
 </html>
