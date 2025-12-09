@@ -123,6 +123,30 @@
         .link-warning i {
             margin-right: 5px;
         }
+        
+        .drive-note {
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 0.85rem;
+            border-left: 4px solid #4caf50;
+        }
+        
+        .drive-note i {
+            margin-right: 8px;
+        }
+        
+        .download-instruction {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 8px;
+            font-size: 0.8rem;
+            color: #666;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -150,6 +174,11 @@
             <div class="prospectus-content">
                 <h1 class="section-title">Prospectus & Documents</h1>
                 <p>Download official documents and prospectuses for Loving Hearts Day Care</p>
+                
+                <div class="drive-note">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Note:</strong> Documents open in Google Drive. Click the download button in Google Drive to save files.
+                </div>
                 
                 <div class="document-list" id="documentsList">
                     <!-- Documents will load here -->
@@ -193,35 +222,6 @@
             document.querySelector('.nav-menu').classList.toggle('active');
         });
         
-        // Function to extract file ID from Google Drive URL
-        function extractFileId(url) {
-            // Try multiple patterns to extract file ID
-            const patterns = [
-                /\/d\/([a-zA-Z0-9_-]+)/,                    // /d/FILE_ID/
-                /id=([a-zA-Z0-9_-]+)/,                      // id=FILE_ID
-                /\/file\/d\/([a-zA-Z0-9_-]+)/,              // /file/d/FILE_ID/
-                /\/open\?id=([a-zA-Z0-9_-]+)/,              // /open?id=FILE_ID
-                /\/uc\?id=([a-zA-Z0-9_-]+)/                 // /uc?id=FILE_ID
-            ];
-            
-            for (const pattern of patterns) {
-                const match = url.match(pattern);
-                if (match && match[1]) {
-                    return match[1];
-                }
-            }
-            return null;
-        }
-        
-        // Function to get direct download link from Google Drive URL
-        function getDirectDownloadLink(url) {
-            const fileId = extractFileId(url);
-            if (fileId) {
-                return `https://drive.google.com/uc?export=download&id=${fileId}`;
-            }
-            return url; // Return original if can't extract
-        }
-        
         // Function to get file icon based on URL
         function getFileIcon(url) {
             if (url.includes('.pdf') || url.toLowerCase().endsWith('.pdf')) return 'fa-file-pdf';
@@ -239,6 +239,13 @@
             if (url.includes('.jpg') || url.includes('.jpeg')) return 'Image';
             if (url.includes('.png')) return 'Image';
             return 'Document';
+        }
+        
+        // Function to get file size text
+        function getFileSizeText(size) {
+            if (!size) return '';
+            if (size < 1024) return size + ' KB';
+            return (size / 1024).toFixed(1) + ' MB';
         }
         
         // Load documents from localStorage
@@ -262,7 +269,7 @@
                     title: "Day Care Prospectus",
                     description: "Information for day students including fee structure and requirements.",
                     link: "", // Empty for now - admin needs to add
-                    type: "prospectus",
+                    type: "prospectus", 
                     date: "2024",
                     note: "Contact admin to add download link"
                 }
@@ -296,7 +303,6 @@
                     const hasValidLink = doc.link && doc.link.trim() !== '';
                     const icon = getFileIcon(doc.link);
                     const fileType = getFileType(doc.link);
-                    const directLink = hasValidLink ? getDirectDownloadLink(doc.link) : '#';
                     
                     const card = document.createElement('div');
                     card.className = 'document-card';
@@ -319,15 +325,16 @@
                         </div>
                         <div class="doc-buttons">
                             ${hasValidLink ? `
-                                <a href="${directLink}" class="download-btn" target="_blank">
-                                    <i class="fas fa-download"></i> Download
+                                <a href="${doc.link}" 
+                                   class="download-btn" 
+                                   target="_blank" 
+                                   rel="noopener noreferrer">
+                                    <i class="fas fa-external-link-alt"></i> Open in Google Drive
                                 </a>
-                                <a href="${doc.link}" class="btn btn-outline" target="_blank">
-                                    <i class="fas fa-eye"></i> Preview Online
-                                </a>
-                                <small style="color: #666; font-size: 0.8rem; text-align: center; margin-top: 5px;">
-                                    Click "Download" to save file
-                                </small>
+                                <div class="download-instruction">
+                                    <i class="fas fa-arrow-down"></i>
+                                    Click above, then click "Download" in Google Drive
+                                </div>
                             ` : `
                                 <button class="download-btn disabled" disabled style="opacity: 0.6;">
                                     <i class="fas fa-download"></i> Download Not Available
@@ -368,16 +375,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             loadDocuments();
             initSmoothScroll();
-            
-            // Also reload documents when coming back to page
-            window.addEventListener('focus', function() {
-                // Check if localStorage was updated
-                loadDocuments();
-            });
         });
-        
-        // For debugging: log what's in localStorage
-        console.log('Current documents in localStorage:', JSON.parse(localStorage.getItem('lovingHeartsDocuments') || '[]'));
     </script>
 </body>
 </html>
