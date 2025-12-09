@@ -43,14 +43,6 @@
             margin-bottom: 20px;
             opacity: 0.5;
         }
-        
-        .drive-warning {
-            background: #fff3e0;
-            border-left: 4px solid #ff9800;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 20px 0;
-        }
     </style>
 </head>
 <body>
@@ -78,11 +70,6 @@
             <div class="prospectus-content">
                 <h1 class="section-title">Prospectus & Documents</h1>
                 <p>Download official documents and prospectuses for Loving Hearts Day Care</p>
-                
-                <div class="drive-warning">
-                    <i class="fas fa-info-circle"></i>
-                    <strong>Note:</strong> All documents are hosted on Google Drive. Make sure sharing is set to "Anyone with the link can view."
-                </div>
                 
                 <div class="document-list" id="documentsList">
                     <!-- Default documents will load here -->
@@ -214,12 +201,12 @@
                             <h3>${doc.title}</h3>
                             <p>${doc.description}</p>
                             ${doc.type ? `<span class="doc-badge">${doc.type}</span>` : ''}
-                            ${doc.date ? `<div class="doc-date">Added: ${doc.date}</div>` : ''}
+                            ${doc.date ? `<div class="doc-date">${doc.date}</div>` : ''}
                         </div>
                     </div>
                     <div class="doc-actions">
                         ${hasValidLink ? `
-                            <a href="${getDirectDownloadLink(doc.link)}" target="_blank" 
+                            <a href="${getDirectDownloadLink(doc.link)}" 
                                class="download-btn" title="Download">
                                 <i class="fas fa-download"></i> Download
                             </a>
@@ -232,7 +219,7 @@
                                 <i class="fas fa-download"></i> Link Not Set
                             </button>
                             <small style="color: #ff9800; display: block; margin-top: 5px;">
-                                Admin needs to add Google Drive link
+                                Document link will be added soon
                             </small>
                         `}
                     </div>
