@@ -151,16 +151,6 @@
             color: #666;
             text-align: center;
         }
-        
-        .admin-badge {
-            background: #4caf50;
-            color: white;
-            padding: 2px 8px;
-            border-radius: 3px;
-            font-size: 0.7rem;
-            margin-left: 8px;
-            font-weight: 500;
-        }
     </style>
 </head>
 <body>
@@ -240,31 +230,15 @@
                 title: "Boarding Prospectus",
                 description: "Complete boarding information including fees, requirements, and policies for boarding students.",
                 link: "https://drive.google.com/file/d/1JQGvHXdu-7xTK7Ve-5OOf9omryzfSeAT/view?usp=sharing",
-                type: "prospectus",
+                type: "Boarding",
                 date: "2024"
             },
             {
                 id: 2,
-                title: "Day Care Prospectus",
+                title: "General School Prospectus",
                 description: "Information for day students including fee structure, requirements, and school policies.",
-                link: "", // ADD YOUR SECOND GOOGLE DRIVE LINK HERE
-                type: "prospectus",
-                date: "2024"
-            },
-            {
-                id: 3,
-                title: "Fee Structure 2024",
-                description: "Detailed fee structure for both day and boarding students.",
-                link: "", // ADD FEE STRUCTURE LINK HERE
-                type: "fees",
-                date: "2024"
-            },
-            {
-                id: 4,
-                title: "School Policies",
-                description: "School policies and regulations for parents and guardians.",
-                link: "", // ADD POLICIES LINK HERE
-                type: "policy",
+                link: "https://drive.google.com/file/d/1-Wgqc41NAMSEK7AeJB1kGIq2WOkTxCrY/view?usp=sharing",
+                type: "Day Care",
                 date: "2024"
             }
         ];
@@ -279,29 +253,7 @@
         function getFileIcon(url) {
             if (!url) return 'fa-file';
             if (url.includes('.pdf') || url.toLowerCase().endsWith('.pdf')) return 'fa-file-pdf';
-            if (url.includes('.doc') || url.toLowerCase().endsWith('.doc') || url.toLowerCase().endsWith('.docx')) return 'fa-file-word';
-            if (url.includes('.xls') || url.includes('.xlsx')) return 'fa-file-excel';
             return 'fa-file';
-        }
-        
-        // Function to get all documents (hardcoded + admin test docs)
-        function getAllDocuments() {
-            // Get admin test documents (only visible to admin in their browser)
-            const adminTestDocs = JSON.parse(localStorage.getItem('lovingHeartsDocuments') || '[]');
-            
-            // For ALL users: Show hardcoded documents
-            // For ADMIN only: Also show test documents (in their browser only)
-            const allDocs = [...HARDCODED_DOCUMENTS];
-            
-            // Add admin test docs with a marker
-            adminTestDocs.forEach(doc => {
-                allDocs.push({
-                    ...doc,
-                    isTest: true  // Mark as test document
-                });
-            });
-            
-            return allDocs;
         }
         
         // Load and display documents
@@ -313,12 +265,13 @@
             setTimeout(() => {
                 if (spinner) spinner.style.display = 'none';
                 
-                const allDocs = getAllDocuments();
+                // Use ONLY hardcoded documents
+                const allDocs = HARDCODED_DOCUMENTS;
                 
                 // Check if we have any documents with links
                 const hasDocumentsWithLinks = allDocs.some(doc => doc.link && doc.link.trim() !== '');
                 
-                if (!hasDocumentsWithLinks) {
+                if (!hasDocumentsWithLinks || allDocs.length === 0) {
                     container.innerHTML = `
                         <div class="no-docs">
                             <i class="fas fa-folder-open"></i>
@@ -339,10 +292,9 @@
                     const hasValidLink = doc.link && doc.link.trim() !== '';
                     const isGoogleDrive = hasValidLink && doc.link.includes('drive.google.com');
                     const icon = getFileIcon(doc.link);
-                    const isTestDoc = doc.isTest || false;
                     
-                    // Skip documents without links (except for admin test docs)
-                    if (!hasValidLink && !isTestDoc) {
+                    // Skip documents without links
+                    if (!hasValidLink) {
                         return;
                     }
                     
@@ -354,14 +306,10 @@
                             <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
                                 <i class="fas ${icon}"></i>
                                 <div style="flex: 1;">
-                                    <h3 style="margin: 0 0 5px 0; display: flex; align-items: center;">
-                                        ${doc.title}
-                                        ${isTestDoc ? '<span class="admin-badge">TEST</span>' : ''}
-                                    </h3>
+                                    <h3 style="margin: 0 0 5px 0;">${doc.title}</h3>
                                     <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
                                         ${doc.type ? `<span class="doc-badge">${doc.type}</span>` : ''}
                                         ${doc.date ? `<span style="font-size: 0.85rem; color: #999;">${doc.date}</span>` : ''}
-                                        ${isTestDoc ? `<span style="font-size: 0.75rem; color: #4caf50; background: #e8f5e9; padding: 2px 8px; border-radius: 3px;">Admin Preview</span>` : ''}
                                     </div>
                                 </div>
                             </div>
@@ -384,12 +332,8 @@
                                 ` : ''}
                             ` : `
                                 <button class="download-btn disabled" disabled style="opacity: 0.6;">
-                                    <i class="fas fa-download"></i> Link Not Set
+                                    <i class="fas fa-download"></i> Coming Soon
                                 </button>
-                                <div class="link-warning">
-                                    <i class="fas fa-clock"></i>
-                                    Download link coming soon
-                                </div>
                             `}
                         </div>
                     `;
@@ -436,8 +380,7 @@
             
             // Debug info (visible in browser console)
             console.log('Prospectus page loaded');
-            console.log('Hardcoded documents:', HARDCODED_DOCUMENTS);
-            console.log('Admin test documents:', JSON.parse(localStorage.getItem('lovingHeartsDocuments') || '[]'));
+            console.log('Documents available:', HARDCODED_DOCUMENTS);
         });
     </script>
 </body>
