@@ -1,159 +1,444 @@
-<script>
-    // Mobile menu toggle for prospectus page
-    document.querySelector('.menu-toggle').addEventListener('click', function() {
-        document.querySelector('.nav-menu').classList.toggle('active');
-    });
-    
-    // Debug function
-    function debugSystem() {
-        const docs = JSON.parse(localStorage.getItem('lovingHeartsDocuments') || '[]');
-        console.log('=== DEBUG ===');
-        console.log('Documents in localStorage:', docs);
-        console.log('Number of docs:', docs.length);
-        
-        if (docs.length > 0) {
-            console.log('First document:', docs[0]);
-            console.log('Link valid?', docs[0].link && docs[0].link.trim() !== '');
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prospectus - Loving Hearts Day Care</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Add these styles */
+        .doc-badge {
+            display: inline-block;
+            background: #e91e63;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin: 5px 0;
+            font-weight: 500;
         }
-        return docs;
-    }
-    
-    // Function to get file icon
-    function getFileIcon(url) {
-        if (!url) return 'fa-file';
-        if (url.includes('.pdf') || url.toLowerCase().endsWith('.pdf')) return 'fa-file-pdf';
-        if (url.includes('.doc') || url.toLowerCase().endsWith('.doc') || url.toLowerCase().endsWith('.docx')) return 'fa-file-word';
-        if (url.includes('.xls') || url.includes('.xlsx')) return 'fa-file-excel';
-        if (url.includes('.jpg') || url.includes('.jpeg') || url.includes('.png')) return 'fa-file-image';
-        return 'fa-file';
-    }
-    
-    // Function to get file type
-    function getFileType(url) {
-        if (!url) return 'Unknown';
-        if (url.includes('.pdf')) return 'PDF';
-        if (url.includes('.doc')) return 'Word';
-        if (url.includes('.xls')) return 'Excel';
-        if (url.includes('.jpg') || url.includes('.jpeg')) return 'Image';
-        if (url.includes('.png')) return 'Image';
-        return 'Document';
-    }
-    
-    // Load documents from localStorage
-    function loadDocuments() {
-        const container = document.getElementById('documentsList');
-        const spinner = document.getElementById('loadingSpinner');
         
-        // Debug first
-        const storedDocs = debugSystem();
+        .doc-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 10px;
+        }
         
-        // Clear loading spinner after short delay
-        setTimeout(() => {
-            if (spinner) spinner.style.display = 'none';
+        .doc-date {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .no-docs {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .no-docs i {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        
+        /* Fix for document cards */
+        .document-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        
+        .document-card i.fa-file-pdf {
+            font-size: 2.5rem;
+            color: #e91e63;
+        }
+        
+        .document-card i.fa-file-word {
+            font-size: 2.5rem;
+            color: #2b579a;
+        }
+        
+        .document-card i.fa-file-excel {
+            font-size: 2.5rem;
+            color: #217346;
+        }
+        
+        .document-card i.fa-file {
+            font-size: 2.5rem;
+            color: #757575;
+        }
+        
+        .doc-content {
+            flex: 1;
+        }
+        
+        .doc-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-width: 180px;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 2px solid #e91e63;
+            color: #e91e63;
+        }
+        
+        .btn-outline:hover {
+            background: #e91e63;
+            color: white;
+        }
+        
+        .spinner {
+            border: 3px solid #f3e5f5;
+            border-top: 3px solid #e91e63;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .link-warning {
+            background: #fff3e0;
+            color: #ef6c00;
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            text-align: center;
+        }
+        
+        .link-warning i {
+            margin-right: 5px;
+        }
+        
+        .drive-note {
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 0.85rem;
+            border-left: 4px solid #4caf50;
+        }
+        
+        .drive-note i {
+            margin-right: 8px;
+        }
+        
+        .download-instruction {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 8px;
+            font-size: 0.8rem;
+            color: #666;
+            text-align: center;
+        }
+        
+        .admin-badge {
+            background: #4caf50;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 0.7rem;
+            margin-left: 8px;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="logo">
+                <i class="fas fa-heart"></i>
+                <span>Loving Hearts Day Care</span>
+            </a>
+            <button class="menu-toggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <ul class="nav-menu">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="index.html#fees">Fees</a></li>
+                <li><a href="index.html#requirements">Requirements</a></li>
+                <li><a href="index.html#contact">Contact</a></li>
+                <li><a href="admin.html">Admin</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="prospectus-container">
+        <div class="container">
+            <div class="prospectus-content">
+                <h1 class="section-title">Prospectus & Documents</h1>
+                <p>Download official documents and prospectuses for Loving Hearts Day Care</p>
+                
+                <div class="drive-note">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Note:</strong> Documents open in Google Drive. Click the download button in Google Drive to save files.
+                </div>
+                
+                <div class="document-list" id="documentsList">
+                    <!-- Documents will load here -->
+                    <div class="spinner" id="loadingSpinner"></div>
+                </div>
+                
+                <div style="margin-top: 40px; text-align: center;">
+                    <p>Need printed copies? Contact the school administration.</p>
+                    <a href="index.html#contact" class="btn btn-secondary">
+                        <i class="fas fa-phone-alt"></i> Contact Us
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <i class="fas fa-heart"></i>
+                    <h3>Loving Hearts Day Care</h3>
+                    <p>Nurturing Tomorrow's Leaders Today</p>
+                </div>
+                <div class="footer-links">
+                    <a href="index.html">Home</a>
+                    <a href="index.html#fees">Fees</a>
+                    <a href="index.html#requirements">Requirements</a>
+                    <a href="index.html#contact">Contact</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 Loving Hearts Day Care. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // =============================================
+        // HARDCODED DOCUMENTS - VISIBLE TO ALL USERS
+        // =============================================
+        const HARDCODED_DOCUMENTS = [
+            {
+                id: 1,
+                title: "Boarding Prospectus",
+                description: "Complete boarding information including fees, requirements, and policies for boarding students.",
+                link: "https://drive.google.com/file/d/1JQGvHXdu-7xTK7Ve-5OOf9omryzfSeAT/view?usp=sharing",
+                type: "prospectus",
+                date: "2024"
+            },
+            {
+                id: 2,
+                title: "Day Care Prospectus",
+                description: "Information for day students including fee structure, requirements, and school policies.",
+                link: "", // ADD YOUR SECOND GOOGLE DRIVE LINK HERE
+                type: "prospectus",
+                date: "2024"
+            },
+            {
+                id: 3,
+                title: "Fee Structure 2024",
+                description: "Detailed fee structure for both day and boarding students.",
+                link: "", // ADD FEE STRUCTURE LINK HERE
+                type: "fees",
+                date: "2024"
+            },
+            {
+                id: 4,
+                title: "School Policies",
+                description: "School policies and regulations for parents and guardians.",
+                link: "", // ADD POLICIES LINK HERE
+                type: "policy",
+                date: "2024"
+            }
+        ];
+        // =============================================
+
+        // Mobile menu toggle for prospectus page
+        document.querySelector('.menu-toggle').addEventListener('click', function() {
+            document.querySelector('.nav-menu').classList.toggle('active');
+        });
+        
+        // Function to get file icon
+        function getFileIcon(url) {
+            if (!url) return 'fa-file';
+            if (url.includes('.pdf') || url.toLowerCase().endsWith('.pdf')) return 'fa-file-pdf';
+            if (url.includes('.doc') || url.toLowerCase().endsWith('.doc') || url.toLowerCase().endsWith('.docx')) return 'fa-file-word';
+            if (url.includes('.xls') || url.includes('.xlsx')) return 'fa-file-excel';
+            return 'fa-file';
+        }
+        
+        // Function to get all documents (hardcoded + admin test docs)
+        function getAllDocuments() {
+            // Get admin test documents (only visible to admin in their browser)
+            const adminTestDocs = JSON.parse(localStorage.getItem('lovingHeartsDocuments') || '[]');
             
-            if (storedDocs.length === 0) {
-                container.innerHTML = `
-                    <div class="no-docs">
-                        <i class="fas fa-folder-open"></i>
-                        <h3>No documents available yet</h3>
-                        <p>Documents will appear here once added by admin</p>
-                        <div style="margin-top: 20px;">
-                            <a href="admin.html" class="btn btn-primary">
-                                <i class="fas fa-user-shield"></i> Go to Admin Panel
-                            </a>
-                        </div>
-                        <div style="margin-top: 20px; background: #f8f9fa; padding: 15px; border-radius: 8px;">
-                            <p style="margin: 0; font-size: 0.9rem; color: #666;">
-                                <strong>Note:</strong> Admin needs to login and add Google Drive links
+            // For ALL users: Show hardcoded documents
+            // For ADMIN only: Also show test documents (in their browser only)
+            const allDocs = [...HARDCODED_DOCUMENTS];
+            
+            // Add admin test docs with a marker
+            adminTestDocs.forEach(doc => {
+                allDocs.push({
+                    ...doc,
+                    isTest: true  // Mark as test document
+                });
+            });
+            
+            return allDocs;
+        }
+        
+        // Load and display documents
+        function loadDocuments() {
+            const container = document.getElementById('documentsList');
+            const spinner = document.getElementById('loadingSpinner');
+            
+            // Hide spinner after short delay
+            setTimeout(() => {
+                if (spinner) spinner.style.display = 'none';
+                
+                const allDocs = getAllDocuments();
+                
+                // Check if we have any documents with links
+                const hasDocumentsWithLinks = allDocs.some(doc => doc.link && doc.link.trim() !== '');
+                
+                if (!hasDocumentsWithLinks) {
+                    container.innerHTML = `
+                        <div class="no-docs">
+                            <i class="fas fa-folder-open"></i>
+                            <h3>Documents Coming Soon</h3>
+                            <p>Prospectus and other documents will be available here shortly.</p>
+                            <p style="margin-top: 15px; font-size: 0.9rem; color: #888;">
+                                Check back soon or contact the school for printed copies.
                             </p>
                         </div>
-                    </div>
-                `;
-                return;
-            }
-            
-            // Clear and rebuild document list with ONLY admin-added documents
-            container.innerHTML = '';
-            
-            storedDocs.forEach(doc => {
-                const hasValidLink = doc.link && doc.link.trim() !== '';
-                const icon = getFileIcon(doc.link);
-                const fileType = getFileType(doc.link);
+                    `;
+                    return;
+                }
                 
-                const card = document.createElement('div');
-                card.className = 'document-card';
+                // Clear and display documents
+                container.innerHTML = '';
                 
-                card.innerHTML = `
-                    <div class="doc-content">
-                        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
-                            <i class="fas ${icon}"></i>
-                            <div>
-                                <h3 style="margin: 0 0 5px 0;">${doc.title}</h3>
-                                <div style="display: flex; gap: 10px; align-items: center;">
-                                    ${doc.type ? `<span class="doc-badge">${doc.type}</span>` : ''}
-                                    ${fileType ? `<span style="font-size: 0.85rem; color: #666;">${fileType}</span>` : ''}
-                                    ${doc.date ? `<span style="font-size: 0.85rem; color: #999;">${doc.date}</span>` : ''}
+                allDocs.forEach(doc => {
+                    const hasValidLink = doc.link && doc.link.trim() !== '';
+                    const isGoogleDrive = hasValidLink && doc.link.includes('drive.google.com');
+                    const icon = getFileIcon(doc.link);
+                    const isTestDoc = doc.isTest || false;
+                    
+                    // Skip documents without links (except for admin test docs)
+                    if (!hasValidLink && !isTestDoc) {
+                        return;
+                    }
+                    
+                    const card = document.createElement('div');
+                    card.className = 'document-card';
+                    
+                    card.innerHTML = `
+                        <div class="doc-content">
+                            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+                                <i class="fas ${icon}"></i>
+                                <div style="flex: 1;">
+                                    <h3 style="margin: 0 0 5px 0; display: flex; align-items: center;">
+                                        ${doc.title}
+                                        ${isTestDoc ? '<span class="admin-badge">TEST</span>' : ''}
+                                    </h3>
+                                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                                        ${doc.type ? `<span class="doc-badge">${doc.type}</span>` : ''}
+                                        ${doc.date ? `<span style="font-size: 0.85rem; color: #999;">${doc.date}</span>` : ''}
+                                        ${isTestDoc ? `<span style="font-size: 0.75rem; color: #4caf50; background: #e8f5e9; padding: 2px 8px; border-radius: 3px;">Admin Preview</span>` : ''}
+                                    </div>
                                 </div>
                             </div>
+                            <p style="margin: 10px 0 15px 0; color: #555;">${doc.description}</p>
                         </div>
-                        <p style="margin: 10px 0 15px 0; color: #555;">${doc.description}</p>
-                    </div>
-                    <div class="doc-buttons">
-                        ${hasValidLink ? `
-                            <a href="${doc.link}" 
-                               class="download-btn" 
-                               target="_blank" 
-                               rel="noopener noreferrer">
-                                <i class="fas fa-external-link-alt"></i> Open in Google Drive
-                            </a>
-                            <div class="download-instruction">
-                                <i class="fas fa-arrow-down"></i>
-                                Click above, then click "Download" in Google Drive
-                            </div>
-                        ` : `
-                            <button class="download-btn disabled" disabled style="opacity: 0.6;">
-                                <i class="fas fa-download"></i> Download Not Available
-                            </button>
-                            <div class="link-warning">
-                                <i class="fas fa-exclamation-triangle"></i>
-                                Admin needs to add a valid Google Drive link
-                            </div>
-                        `}
-                    </div>
-                `;
+                        <div class="doc-buttons">
+                            ${hasValidLink ? `
+                                <a href="${doc.link}" 
+                                   class="download-btn" 
+                                   target="_blank" 
+                                   rel="noopener noreferrer">
+                                    <i class="fas fa-external-link-alt"></i> 
+                                    ${isGoogleDrive ? 'Open in Google Drive' : 'Download'}
+                                </a>
+                                ${isGoogleDrive ? `
+                                    <div class="download-instruction">
+                                        <i class="fas fa-info-circle"></i>
+                                        Opens Google Drive. Click "Download" button there.
+                                    </div>
+                                ` : ''}
+                            ` : `
+                                <button class="download-btn disabled" disabled style="opacity: 0.6;">
+                                    <i class="fas fa-download"></i> Link Not Set
+                                </button>
+                                <div class="link-warning">
+                                    <i class="fas fa-clock"></i>
+                                    Download link coming soon
+                                </div>
+                            `}
+                        </div>
+                    `;
+                    
+                    container.appendChild(card);
+                });
                 
-                container.appendChild(card);
-            });
-        }, 500);
-    }
-    
-    // Also add smooth scrolling for anchor links
-    function initSmoothScroll() {
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function(e) {
-                e.preventDefault();
-                const targetId = this.getAttribute('href');
-                if (targetId === '#') return;
-                
-                const targetElement = document.querySelector(targetId);
-                if (targetElement) {
-                    window.scrollTo({
-                        top: targetElement.offsetTop - 80,
-                        behavior: 'smooth'
-                    });
+                // If no cards were added (all had empty links)
+                if (container.innerHTML === '') {
+                    container.innerHTML = `
+                        <div class="no-docs">
+                            <i class="fas fa-folder-open"></i>
+                            <h3>Documents Coming Soon</h3>
+                            <p>Document links will be added here soon.</p>
+                        </div>
+                    `;
                 }
-            });
-        });
-    }
-    
-    // Load documents when page loads
-    document.addEventListener('DOMContentLoaded', function() {
-        loadDocuments();
-        initSmoothScroll();
+            }, 500);
+        }
         
-        // Also reload when coming back to page (in case admin added docs)
-        window.addEventListener('focus', function() {
+        // Smooth scrolling for anchor links
+        function initSmoothScroll() {
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href');
+                    if (targetId === '#') return;
+                    
+                    const targetElement = document.querySelector(targetId);
+                    if (targetElement) {
+                        window.scrollTo({
+                            top: targetElement.offsetTop - 80,
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+            });
+        }
+        
+        // Load documents when page loads
+        document.addEventListener('DOMContentLoaded', function() {
             loadDocuments();
+            initSmoothScroll();
+            
+            // Debug info (visible in browser console)
+            console.log('Prospectus page loaded');
+            console.log('Hardcoded documents:', HARDCODED_DOCUMENTS);
+            console.log('Admin test documents:', JSON.parse(localStorage.getItem('lovingHeartsDocuments') || '[]'));
         });
-    });
-</script>
+    </script>
+</body>
+</html>
