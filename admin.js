@@ -1,6 +1,6 @@
 // Admin Panel - Google Drive Integration
 document.addEventListener('DOMContentLoaded', function() {
-    const uploadForm = document.getElementById('uploadForm');
+    const uploadForm = document.getElementById('documentForm'); // FIXED: was 'uploadForm'
     const documentList = document.getElementById('documentsList');
     const loadingSpinner = document.getElementById('loadingSpinner');
     
