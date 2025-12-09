@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prospectus - Loving Hearts Day Care</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="logo">
+                <i class="fas fa-heart"></i>
+                <span>Loving Hearts Day Care</span>
+            </a>
+            <button class="menu-toggle">
+                <i class="fas fa-bars"></i>
+            </button>
+            <ul class="nav-menu">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="index.html#fees">Fees</a></li>
+                <li><a href="index.html#requirements">Requirements</a></li>
+                <li><a href="index.html#contact">Contact</a></li>
+                <li><a href="admin.html">Admin</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="prospectus-container">
+        <div class="container">
+            <div class="prospectus-content">
+                <h1 class="section-title">Prospectus & Documents</h1>
+                <p>Download official documents and prospectuses for Loving Hearts Day Care</p>
+                
+                <div class="document-list" id="documentsList">
+                    <!-- Documents will be loaded here -->
+                    <div class="document-card">
+                        <i class="fas fa-file-pdf"></i>
+                        <h3>Boarding Prospectus</h3>
+                        <p>Complete boarding information including fees, requirements, and policies.</p>
+                        <a href="#" class="download-btn" onclick="downloadFile('Boarding_Prospectus_Final.pdf')">
+                            <i class="fas fa-download"></i> Download PDF
+                        </a>
+                    </div>
+                    
+                    <div class="document-card">
+                        <i class="fas fa-file-pdf"></i>
+                        <h3>Day Care Prospectus</h3>
+                        <p>Information for day students including fee structure and requirements.</p>
+                        <a href="#" class="download-btn" onclick="downloadFile('General_School_Prospectus_Final.pdf')">
+                            <i class="fas fa-download"></i> Download PDF
+                        </a>
+                    </div>
+                    
+                    <div class="document-card">
+                        <i class="fas fa-file-alt"></i>
+                        <h3>Fee Structure 2024</h3>
+                        <p>Detailed fee structure for both day and boarding students.</p>
+                        <a href="#" class="download-btn" onclick="downloadFile('fee_structure.pdf')">
+                            <i class="fas fa-download"></i> Download
+                        </a>
+                    </div>
+                    
+                    <div class="document-card">
+                        <i class="fas fa-file-contract"></i>
+                        <h3>Policy Document</h3>
+                        <p>School policies and regulations for parents and guardians.</p>
+                        <a href="#" class="download-btn" onclick="downloadFile('policies.pdf')">
+                            <i class="fas fa-download"></i> Download
+                        </a>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 40px; text-align: center;">
+                    <p>Need printed copies? Contact the school administration.</p>
+                    <a href="index.html#contact" class="btn btn-secondary">
+                        <i class="fas fa-phone-alt"></i> Contact Us
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <i class="fas fa-heart"></i>
+                    <h3>Loving Hearts Day Care</h3>
+                    <p>Nurturing Tomorrow's Leaders Today</p>
+                </div>
+                <div class="footer-links">
+                    <a href="index.html">Home</a>
+                    <a href="index.html#fees">Fees</a>
+                    <a href="index.html#requirements">Requirements</a>
+                    <a href="index.html#contact">Contact</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 Loving Hearts Day Care. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Mobile menu toggle for prospectus page
+        document.querySelector('.menu-toggle').addEventListener('click', function() {
+            document.querySelector('.nav-menu').classList.toggle('active');
+        });
+        
+        // Simulate file download (in real app, this would link to actual files)
+        function downloadFile(filename) {
+            alert(`In a real application, this would download: ${filename}\n\nFor this demo, files are simulated.`);
+            // In production: window.location.href = `/downloads/${filename}`;
+        }
+        
+        // Load dynamic documents from localStorage
+        function loadDynamicDocuments() {
+            const docs = JSON.parse(localStorage.getItem('daycare_documents') || '[]');
+            const container = document.getElementById('documentsList');
+            
+            docs.forEach(doc => {
+                const card = document.createElement('div');
+                card.className = 'document-card';
+                card.innerHTML = `
+                    <i class="fas fa-file-pdf"></i>
+                    <h3>${doc.title}</h3>
+                    <p>${doc.type.charAt(0).toUpperCase() + doc.type.slice(1)} document</p>
+                    <a href="#" class="download-btn" onclick="downloadFile('${doc.fileName}')">
+                        <i class="fas fa-download"></i> Download
+                    </a>
+                `;
+                container.appendChild(card);
+            });
+        }
+        
+        // Load documents when page loads
+        document.addEventListener('DOMContentLoaded', loadDynamicDocuments);
+    </script>
+</body>
+</html>
