@@ -43,6 +43,86 @@
             margin-bottom: 20px;
             opacity: 0.5;
         }
+        
+        /* Fix for document cards */
+        .document-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 20px;
+            padding: 25px;
+        }
+        
+        .document-card i.fa-file-pdf {
+            font-size: 2.5rem;
+            color: #e91e63;
+        }
+        
+        .document-card i.fa-file-word {
+            font-size: 2.5rem;
+            color: #2b579a;
+        }
+        
+        .document-card i.fa-file-excel {
+            font-size: 2.5rem;
+            color: #217346;
+        }
+        
+        .document-card i.fa-file {
+            font-size: 2.5rem;
+            color: #757575;
+        }
+        
+        .doc-content {
+            flex: 1;
+        }
+        
+        .doc-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-width: 180px;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 2px solid #e91e63;
+            color: #e91e63;
+        }
+        
+        .btn-outline:hover {
+            background: #e91e63;
+            color: white;
+        }
+        
+        .spinner {
+            border: 3px solid #f3e5f5;
+            border-top: 3px solid #e91e63;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .link-warning {
+            background: #fff3e0;
+            color: #ef6c00;
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            text-align: center;
+        }
+        
+        .link-warning i {
+            margin-right: 5px;
+        }
     </style>
 </head>
 <body>
@@ -72,7 +152,7 @@
                 <p>Download official documents and prospectuses for Loving Hearts Day Care</p>
                 
                 <div class="document-list" id="documentsList">
-                    <!-- Default documents will load here -->
+                    <!-- Documents will load here -->
                     <div class="spinner" id="loadingSpinner"></div>
                 </div>
                 
@@ -113,24 +193,52 @@
             document.querySelector('.nav-menu').classList.toggle('active');
         });
         
-        // Function to convert Google Drive link to direct download link
-        function getDirectDownloadLink(googleDriveLink) {
-            // Convert Google Drive view link to direct download link
-            if (googleDriveLink.includes('drive.google.com/file/d/')) {
-                const fileId = googleDriveLink.match(/\/d\/(.*?)\//)?.[1];
-                if (fileId) {
-                    return `https://drive.google.com/uc?export=download&id=${fileId}`;
+        // Function to extract file ID from Google Drive URL
+        function extractFileId(url) {
+            // Try multiple patterns to extract file ID
+            const patterns = [
+                /\/d\/([a-zA-Z0-9_-]+)/,                    // /d/FILE_ID/
+                /id=([a-zA-Z0-9_-]+)/,                      // id=FILE_ID
+                /\/file\/d\/([a-zA-Z0-9_-]+)/,              // /file/d/FILE_ID/
+                /\/open\?id=([a-zA-Z0-9_-]+)/,              // /open?id=FILE_ID
+                /\/uc\?id=([a-zA-Z0-9_-]+)/                 // /uc?id=FILE_ID
+            ];
+            
+            for (const pattern of patterns) {
+                const match = url.match(pattern);
+                if (match && match[1]) {
+                    return match[1];
                 }
             }
-            return googleDriveLink; // Return original if can't convert
+            return null;
         }
         
-        // Function to create Google Drive viewer link
-        function getViewLink(googleDriveLink) {
-            if (googleDriveLink.includes('drive.google.com/file/d/')) {
-                return googleDriveLink.replace('/view?usp=sharing', '').replace('/view?usp=drivesdk', '');
+        // Function to get direct download link from Google Drive URL
+        function getDirectDownloadLink(url) {
+            const fileId = extractFileId(url);
+            if (fileId) {
+                return `https://drive.google.com/uc?export=download&id=${fileId}`;
             }
-            return googleDriveLink;
+            return url; // Return original if can't extract
+        }
+        
+        // Function to get file icon based on URL
+        function getFileIcon(url) {
+            if (url.includes('.pdf') || url.toLowerCase().endsWith('.pdf')) return 'fa-file-pdf';
+            if (url.includes('.doc') || url.toLowerCase().endsWith('.doc') || url.toLowerCase().endsWith('.docx')) return 'fa-file-word';
+            if (url.includes('.xls') || url.includes('.xlsx')) return 'fa-file-excel';
+            if (url.includes('.jpg') || url.includes('.jpeg') || url.includes('.png')) return 'fa-file-image';
+            return 'fa-file';
+        }
+        
+        // Function to get file type name
+        function getFileType(url) {
+            if (url.includes('.pdf')) return 'PDF';
+            if (url.includes('.doc')) return 'Word';
+            if (url.includes('.xls')) return 'Excel';
+            if (url.includes('.jpg') || url.includes('.jpeg')) return 'Image';
+            if (url.includes('.png')) return 'Image';
+            return 'Document';
         }
         
         // Load documents from localStorage
@@ -138,140 +246,107 @@
             const container = document.getElementById('documentsList');
             const spinner = document.getElementById('loadingSpinner');
             
-            // Default hardcoded documents (fallback if none in localStorage)
+            // Default documents (always shown)
             const defaultDocs = [
                 {
-                    id: 1,
+                    id: 'boarding',
                     title: "Boarding Prospectus",
                     description: "Complete boarding information including fees, requirements, and policies.",
-                    link: "#", // Admin needs to add real Google Drive link
+                    link: "", // Empty for now - admin needs to add
                     type: "prospectus",
-                    date: "2024"
+                    date: "2024",
+                    note: "Contact admin to add download link"
                 },
                 {
-                    id: 2,
+                    id: 'daycare',
                     title: "Day Care Prospectus",
                     description: "Information for day students including fee structure and requirements.",
-                    link: "#", // Admin needs to add real Google Drive link
+                    link: "", // Empty for now - admin needs to add
                     type: "prospectus",
-                    date: "2024"
+                    date: "2024",
+                    note: "Contact admin to add download link"
                 }
             ];
             
             // Get documents from localStorage (added by admin)
             const storedDocs = JSON.parse(localStorage.getItem('lovingHeartsDocuments') || '[]');
             
-            // Combine documents (stored docs first, then defaults)
+            // Combine all documents (admin docs first, then defaults)
             const allDocs = [...storedDocs, ...defaultDocs];
             
             // Clear loading spinner
-            if (spinner) spinner.style.display = 'none';
-            
-            if (allDocs.length === 0) {
-                container.innerHTML = `
-                    <div class="no-docs">
-                        <i class="fas fa-folder-open"></i>
-                        <h3>No documents available yet</h3>
-                        <p>Documents will appear here once added by admin</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            // Clear and rebuild document list
-            container.innerHTML = '';
-            
-            allDocs.forEach(doc => {
-                const card = document.createElement('div');
-                card.className = 'document-card';
+            setTimeout(() => {
+                if (spinner) spinner.style.display = 'none';
                 
-                // Get appropriate icon
-                let icon = 'fa-file';
-                if (doc.link.includes('.pdf')) icon = 'fa-file-pdf';
-                else if (doc.link.includes('.doc')) icon = 'fa-file-word';
-                else if (doc.link.includes('.xls')) icon = 'fa-file-excel';
-                
-                // Check if link is valid (not "#")
-                const hasValidLink = doc.link && doc.link !== '#';
-                
-                card.innerHTML = `
-                    <div class="doc-info">
-                        <div style="flex: 1;">
-                            <i class="fas ${icon}" style="font-size: 2rem; color: #e91e63; margin-bottom: 10px;"></i>
-                            <h3>${doc.title}</h3>
-                            <p>${doc.description}</p>
-                            ${doc.type ? `<span class="doc-badge">${doc.type}</span>` : ''}
-                            ${doc.date ? `<div class="doc-date">${doc.date}</div>` : ''}
+                if (allDocs.length === 0) {
+                    container.innerHTML = `
+                        <div class="no-docs">
+                            <i class="fas fa-folder-open"></i>
+                            <h3>No documents available yet</h3>
+                            <p>Documents will appear here once added by admin</p>
                         </div>
-                    </div>
-                    <div class="doc-actions">
-                        ${hasValidLink ? `
-                            <a href="${getDirectDownloadLink(doc.link)}" 
-                               class="download-btn" title="Download">
-                                <i class="fas fa-download"></i> Download
-                            </a>
-                            <a href="${getViewLink(doc.link)}" target="_blank" 
-                               class="btn btn-secondary btn-small" title="Preview">
-                                <i class="fas fa-eye"></i> Preview
-                            </a>
-                        ` : `
-                            <button class="download-btn disabled" disabled title="Link not set">
-                                <i class="fas fa-download"></i> Link Not Set
-                            </button>
-                            <small style="color: #ff9800; display: block; margin-top: 5px;">
-                                Document link will be added soon
-                            </small>
-                        `}
-                    </div>
-                `;
+                    `;
+                    return;
+                }
                 
-                container.appendChild(card);
-            });
+                // Clear and rebuild document list
+                container.innerHTML = '';
+                
+                allDocs.forEach(doc => {
+                    const hasValidLink = doc.link && doc.link.trim() !== '';
+                    const icon = getFileIcon(doc.link);
+                    const fileType = getFileType(doc.link);
+                    const directLink = hasValidLink ? getDirectDownloadLink(doc.link) : '#';
+                    
+                    const card = document.createElement('div');
+                    card.className = 'document-card';
+                    
+                    card.innerHTML = `
+                        <div class="doc-content">
+                            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+                                <i class="fas ${icon}"></i>
+                                <div>
+                                    <h3 style="margin: 0 0 5px 0;">${doc.title}</h3>
+                                    <div style="display: flex; gap: 10px; align-items: center;">
+                                        ${doc.type ? `<span class="doc-badge">${doc.type}</span>` : ''}
+                                        ${fileType ? `<span style="font-size: 0.85rem; color: #666;">${fileType}</span>` : ''}
+                                        ${doc.date ? `<span style="font-size: 0.85rem; color: #999;">${doc.date}</span>` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                            <p style="margin: 10px 0 15px 0; color: #555;">${doc.description}</p>
+                            ${doc.note ? `<div class="link-warning"><i class="fas fa-info-circle"></i> ${doc.note}</div>` : ''}
+                        </div>
+                        <div class="doc-buttons">
+                            ${hasValidLink ? `
+                                <a href="${directLink}" class="download-btn" target="_blank">
+                                    <i class="fas fa-download"></i> Download
+                                </a>
+                                <a href="${doc.link}" class="btn btn-outline" target="_blank">
+                                    <i class="fas fa-eye"></i> Preview Online
+                                </a>
+                                <small style="color: #666; font-size: 0.8rem; text-align: center; margin-top: 5px;">
+                                    Click "Download" to save file
+                                </small>
+                            ` : `
+                                <button class="download-btn disabled" disabled style="opacity: 0.6;">
+                                    <i class="fas fa-download"></i> Download Not Available
+                                </button>
+                                <div class="link-warning">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    Download link will be added soon
+                                </div>
+                            `}
+                        </div>
+                    `;
+                    
+                    container.appendChild(card);
+                });
+            }, 500);
         }
         
-        // Add CSS for disabled buttons
-        const style = document.createElement('style');
-        style.textContent = `
-            .disabled {
-                opacity: 0.5;
-                cursor: not-allowed !important;
-            }
-            
-            .btn-small {
-                padding: 8px 15px;
-                font-size: 0.9rem;
-                margin-top: 5px;
-            }
-            
-            .doc-actions {
-                display: flex;
-                flex-direction: column;
-                gap: 5px;
-                min-width: 150px;
-            }
-            
-            .spinner {
-                border: 3px solid #f3e5f5;
-                border-top: 3px solid #e91e63;
-                border-radius: 50%;
-                width: 40px;
-                height: 40px;
-                animation: spin 1s linear infinite;
-                margin: 20px auto;
-            }
-            
-            @keyframes spin {
-                0% { transform: rotate(0deg); }
-                100% { transform: rotate(360deg); }
-            }
-        `;
-        document.head.appendChild(style);
-        
-        // Load documents when page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            loadDocuments();
-            
-            // Also add smooth scrolling for anchor links
+        // Also add smooth scrolling for anchor links
+        function initSmoothScroll() {
             document.querySelectorAll('a[href^="#"]').forEach(anchor => {
                 anchor.addEventListener('click', function(e) {
                     e.preventDefault();
@@ -287,7 +362,22 @@
                     }
                 });
             });
+        }
+        
+        // Load documents when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDocuments();
+            initSmoothScroll();
+            
+            // Also reload documents when coming back to page
+            window.addEventListener('focus', function() {
+                // Check if localStorage was updated
+                loadDocuments();
+            });
         });
+        
+        // For debugging: log what's in localStorage
+        console.log('Current documents in localStorage:', JSON.parse(localStorage.getItem('lovingHeartsDocuments') || '[]'));
     </script>
 </body>
 </html>
